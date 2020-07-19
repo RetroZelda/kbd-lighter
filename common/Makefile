@@ -7,31 +7,32 @@ ifndef LIBRARY_DIR
 $(error LIBRARY_DIR is not set)
 endif
 
-ifndef APPLICATION
-$(error APPLICATION is not set)
+ifndef LIBRARY
+$(error LIBRARY is not set)
 endif
 
 WORKING_DIR := $(WORKING_DIR)/common
-OUTPUT = $(LIBRARY_DIR)/lib$(APPLICATION)-common.a
+OUTPUT = $(LIBRARY_DIR)/lib$(LIBRARY).a
 
-SOURCE_DIR = ./src
-INCLUDE_DIR = ./include
+SOURCE_DIR = $(LIBRARY_ROOT)/src
+INCLUDE_DIR = $(LIBRARY_ROOT)/include
 SOURCES += $(shell find $(SOURCE_DIR) -name '*.c')
 OBJECTS += $(patsubst $(SOURCE_DIR)/%.c, $(WORKING_DIR)/%.o, $(SOURCES))
 
 HEADERS += $(shell find $(INCLUDE_DIR) -name '*.h')
+HEADERS_DEST += $(patsubst $(INCLUDE_DIR)/%.h, $(LIB_INC_DIR)/%.h, $(HEADERS))
 
-LIB_LIST =
-CFLAGS  = -c
-LDFLAGS := $(addprefix -I,$(INCLUDE_DIR))
+LIB_LIST = 
+LDFLAGS += $(addprefix -I,$(INCLUDE_DIR))
 LIBS := $(addprefix -l,$(LIB_LIST))
 
 AR = gcc-ar
 ARFLAGS = rcs
-all: $(OUTPUT)
+all: $(OUTPUT) $(HEADERS_DEST)
 
 dbg:
 	@echo $(HEADERS)
+	@echo $(HEADERS_DEST)
 
 clean:
 	@echo cleaning $(OBJECTS)
@@ -40,17 +41,18 @@ clean:
 	@rm -d -r -f $(WORKING_DIR)
 	@echo cleaning $(OUTPUT)
 	@rm -f $(OUTPUT)
-	@echo cleaning $(HEADERS)
-	@rm -f $(HEADERS)
+	@echo cleaning $(HEADERS_DEST)
+	@rm -f $(HEADERS_DEST)
 	@echo done
 
 $(OUTPUT): setup $(OBJECTS)
-	@echo building ./$@
-	#@$(CC) $(CFLAGS) $(LDFLAGS) $(OBJECTS) -o $@ $(LIBS)
-	$(AR) $(ARFLAGS) $@ $(OBJECTS)
-	@echo copying includes
-	@cp $(INCLUDE_DIR)/* $(LIB_INC_DIR)
+	@echo building $@
+	@$(AR) $(ARFLAGS) $@ $(OBJECTS)
 	@echo complete
+
+$(LIB_INC_DIR)/%.h: $(INCLUDE_DIR)/%.h
+	@echo copying ./$< to $@
+	@cp $< $@
 
 setup: $(WORKING_DIR)
 
