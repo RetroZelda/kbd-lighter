@@ -18,9 +18,11 @@ LDFLAGS += $(addprefix -I,$(LIB_HEADERS))
 LDFLAGS += $(addprefix -I,$(LIB_PATHS))
 export LDFLAGS
 
-export DAEMON_ROOT 		= $(PWD)/server
+export DAEMON_ROOT 		= $(PWD)/daemon
 export LIBRARY_ROOT 	= $(PWD)/common
-export INTERFACE_ROOT 	= $(PWD)/client
+export INTERFACE_ROOT 	= $(PWD)/application
+
+.PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup
 
 all: setup $(LIBRARY) $(DAEMON) $(INTERFACE)
 
