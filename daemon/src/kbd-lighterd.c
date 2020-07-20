@@ -10,10 +10,8 @@
 #include <signal.h>
 #include <stdbool.h>
 
-#include <sys/socket.h>
-#include <sys/un.h>
-
 #include "kbd_common.h"
+#include "kbd_server.h"
 #include "kbd_breathe.h"
 #include "kbd_screen.h"
 #include "kbd_audio.h"
@@ -50,7 +48,6 @@ static RunMode s_brightness_mode = RM_BREATHE;
 static KeyboardLEDState s_led_state;
 static KeyboardLEDState s_brightness_state;
 static KeyboardLEDState s_final_state;
-static bool s_run;
 
 void merge_keyboard_states()
 {
@@ -111,8 +108,12 @@ void lighterd_shutdown()
 
 void sig_term_handler(int signum, siginfo_t *info, void *ptr)
 {
-    s_run = false;
     lighterd_shutdown();
+    server_shutdown();
+
+    close(s_final_state.m_ColorFile.m_Handle);
+    close(s_final_state.m_BrightnessFile.m_Handle);
+    close(s_final_state.m_MaxBrightnessFile.m_Handle);
 }
 
 void catch_sigterm()
@@ -166,102 +167,20 @@ int main(int argc, char **argv)
 
     // TODO: prep to make process daemon
 
-    // open the unix socket to write our obtained led/brightness
-    struct sockaddr_un server_addr;
-    int server_handle;
 
-    if ((server_handle = socket(AF_UNIX, SOCK_STREAM, 0)) == -1)
+    server_setup();
+    lighterd_setup(configurations);
+    while (1)
     {
-        perror("socket error");
-        exit(-1);
-    }
-
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sun_family = AF_UNIX;
-    strncpy(server_addr.sun_path, SOCKET_ADDR, sizeof(server_addr.sun_path) - 1);
-
-    unlink(SOCKET_ADDR);
-    size_t addr_size = sizeof(server_addr.sun_family) + strlen(server_addr.sun_path);
-    if (bind(server_handle, (struct sockaddr *)&server_addr, addr_size) == -1)
-    {
-        perror("bind error");
-        exit(-1);
-    }
-
-    if (listen(server_handle, 1) == -1)
-    {
-        perror("listen error");
-        exit(1);
-    }
-
-    // setup and run our actual stuff
-
-    int client_handle = -1;
-    s_run = true;
-    while (s_run)
-    {
-        if(client_handle == -1)
-        {
-            client_handle = accept(server_handle, NULL, NULL);
-            if (client_handle == -1)
-            {
-                perror("accept error");
-                continue;
-            }
-
-            perror("accept");
-            int flags = fcntl(client_handle, F_GETFL, 0);
-            if(flags == -1)
-            {
-                perror("fcntl get error");
-                exit(-1);
-            }
-
-            if(fcntl(client_handle, F_SETFL, flags | O_NONBLOCK) == -1)
-            {
-                perror("fcntl set error");
-                exit(-1);
-            }
-
-
-            lighterd_setup(configurations);
-        }
-        else
+        server_tick();
+        if(server_has_connection())
         {
             lighterd_run();
-
-            // write our final state data out
-            ssize_t write_size = write(client_handle, &s_final_state, sizeof(LEDState));
-            if (write_size != sizeof(LEDState))
-            {
-                if (write_size > 0)
-                {
-                    printf("partial write");
-                }
-                else
-                {
-                    switch(errno)
-                    {
-                        case EWOULDBLOCK:
-                        break;
-                        default:
-                            perror("write error");
-                            close(client_handle);
-                            client_handle = -1;
-
-                            lighterd_shutdown();
-                            break;
-                    }
-                }
-            }
+            server_write(&s_final_state, sizeof(LEDState));
             //print_led_state(&s_final_state);
         }
-        usleep(1);
+        usleep(1000);
     }
-
-    close(s_final_state.m_ColorFile.m_Handle);
-    close(s_final_state.m_BrightnessFile.m_Handle);
-    close(s_final_state.m_MaxBrightnessFile.m_Handle);
 
     return 0;
 }

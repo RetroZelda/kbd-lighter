@@ -22,7 +22,7 @@ LIB_LIST = X11 m Xext Xi pulse pulse-simple
 LIBS := $(addprefix -l,$(LIB_LIST))
 LIBS += $(LIBRARY_DIR)/lib$(LIBRARY).a
 
-CFLAGS  += -pthread
+CFLAGS  += -pthread -D_POSIX_C_SOURCE
 
 all: $(OUTPUT)
 
