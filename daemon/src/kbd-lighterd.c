@@ -46,7 +46,7 @@ static RunModeFuncs s_run_modes[RM_COUNT] =
 
 static struct sigaction s_sigaction;
 static RunMode s_led_mode = RM_SCREEN;
-static RunMode s_brightness_mode = RM_AUDIO;
+static RunMode s_brightness_mode = RM_BREATHE;
 static KeyboardLEDState s_led_state;
 static KeyboardLEDState s_brightness_state;
 static KeyboardLEDState s_final_state;
@@ -54,7 +54,7 @@ static bool s_run;
 
 void merge_keyboard_states()
 {
-    memcpy(&s_final_state.m_Color, &s_brightness_state.m_Color, sizeof(RGB));
+    memcpy(&s_final_state.m_Color, &s_led_state.m_Color, sizeof(RGB));
     memcpy(&s_final_state.m_Brightness, &s_brightness_state.m_Brightness, sizeof(Brightness));
 }
 
@@ -154,9 +154,9 @@ int main(int argc, char **argv)
     }
 
     // setup the default configurations
-    BreatheConfig breathe_config = {0, 2000};
-    ScreenConfig screen_config = {0.00001f, 1, 1, 100000, 100000};
-    AudioConfig audio_config = {0.01f, 0.5f, 0.75f, 2000};
+    BreatheConfig breathe_config = {0, 10000};
+    ScreenConfig screen_config = {0.9, 1, 1, 10000, 10000};
+    AudioConfig audio_config = {0.01f, 0.5f, 1.0f, 2000};
     void *configurations[RM_COUNT] =
         {
             &breathe_config,
@@ -254,10 +254,9 @@ int main(int argc, char **argv)
                     }
                 }
             }
-            // write_led_brightness(s_final_state.m_BrightnessFile.m_Handle, &s_final_state);
-            // write_led_state(s_final_state.m_ColorFile.m_Handle, &s_final_state);
-            print_led_state(&s_final_state);
+            //print_led_state(&s_final_state);
         }
+        usleep(1);
     }
 
     close(s_final_state.m_ColorFile.m_Handle);

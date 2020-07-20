@@ -24,11 +24,11 @@ static float s_level;
 static APE_EqualizerHandle s_FrequencyHandles[NUM_SEGMENTS];
 static APE_FrequencySpectrum s_FrequencySegments[NUM_SEGMENTS] = 
 {
-    {SAMPLE_RATE, 31.0f,    17.0f,   5.0f, 0.0f, 0.0f},
-    {SAMPLE_RATE, 62.0f,    31.0f,   5.0f, 0.0f, 4.0f},
+    {SAMPLE_RATE, 31.0f,    17.0f,   5.0f, 0.0f, 8.0f},
+    {SAMPLE_RATE, 62.0f,    31.0f,   5.0f, 0.0f, 8.0f},
     {SAMPLE_RATE, 125.0f,   75.0f,   5.0f, 0.0f, 8.0f},
-    {SAMPLE_RATE, 250.0f,   125.0f,  5.0f, 0.0f, 0.0f},
-    {SAMPLE_RATE, 500.0f,   250.0f,  5.0f, 0.0f, -5.0f},
+    {SAMPLE_RATE, 250.0f,   125.0f,  5.0f, 0.0f, 2.0f},
+    {SAMPLE_RATE, 500.0f,   250.0f,  5.0f, 0.0f, -2.0f},
     {SAMPLE_RATE, 1000.0f,  500.0f,  5.0f, 0.0f, -5.0f},
     {SAMPLE_RATE, 2000.0f,  750.0f,  5.0f, 0.0f, -5.0f},
     {SAMPLE_RATE, 4000.0f,  1500.0f, 5.0f, 0.0f, -5.0f},

@@ -2,32 +2,45 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <time.h>
 
 static int s_brightness_adjustment;
 static int s_color_counter;
 static BreatheConfig s_config = {1, 2000};
 
+static double s_prev_time = 0.0f;
+
 void breathe_run(KeyboardLEDState* led_state)
 {
-    led_state->m_Brightness.value += s_brightness_adjustment;
-    if(led_state->m_Brightness.value >= led_state->m_MaxBrightness.value ||
-        led_state->m_Brightness.value <= 1)
-    {
-        s_brightness_adjustment *= -1;
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
 
-        if(led_state->m_Brightness.value <= 1)
+    double cur_time = (double)ts.tv_sec + ((double)ts.tv_nsec / 1000000000.0);
+    double time_dif = cur_time - s_prev_time;
+    double sleep_time = (double)s_config.m_SleepTimeMS / 1000000.0;
+
+    if(time_dif >= sleep_time)
+    {
+        s_prev_time = cur_time;
+        led_state->m_Brightness.value += s_brightness_adjustment;
+        if(led_state->m_Brightness.value >= led_state->m_MaxBrightness.value ||
+            led_state->m_Brightness.value <= 1)
         {
-            s_color_counter = (s_color_counter %7) + 1; // 1-7 range
-            
-            if(s_config.m_ChangeColor == 1)
+            s_brightness_adjustment *= -1;
+
+            if(led_state->m_Brightness.value <= 1)
             {
-                led_state->m_Color.values.R = ((s_color_counter & (1 << 0)) == 0) ? COLOR_MIN : COLOR_MAX;
-                led_state->m_Color.values.G = ((s_color_counter & (1 << 1)) == 0) ? COLOR_MIN : COLOR_MAX;
-                led_state->m_Color.values.B = ((s_color_counter & (1 << 2)) == 0) ? COLOR_MIN : COLOR_MAX;
+                s_color_counter = (s_color_counter %7) + 1; // 1-7 range
+                
+                if(s_config.m_ChangeColor == 1)
+                {
+                    led_state->m_Color.values.R = ((s_color_counter & (1 << 0)) == 0) ? COLOR_MIN : COLOR_MAX;
+                    led_state->m_Color.values.G = ((s_color_counter & (1 << 1)) == 0) ? COLOR_MIN : COLOR_MAX;
+                    led_state->m_Color.values.B = ((s_color_counter & (1 << 2)) == 0) ? COLOR_MIN : COLOR_MAX;
+                }
             }
         }
     }
-    usleep(s_config.m_SleepTimeMS); // 2ms
 }
 
 void breathe_setup(KeyboardLEDState* led_state, BreatheConfig* config)

@@ -16,16 +16,17 @@
 #include "utility/color_conversion.h"
 
 static ScreenConfig s_config = {0.5f, 1, 1, 1000, 10000};
-
 static pthread_t s_thread_id;
 
 static pthread_mutex_t s_is_running_lock;
 static int s_is_thread_running;
 
 static pthread_mutex_t s_active_rgb_lock;
-RGBColor s_active_color_rgb;
-RGBColor s_prev_color_rgb;
-RGBColor s_cur_color_rgb;
+static RGBColor s_active_color_rgb;
+static RGBColor s_prev_color_rgb;
+static RGBColor s_cur_color_rgb;
+
+static double s_prev_time = 0.0f;
 
 void *thread_run(void *arg)
 {
@@ -33,9 +34,9 @@ void *thread_run(void *arg)
 
     Display* display = XOpenDisplay((char *)NULL);
     Visual* default_visual = DefaultVisual(display, 0);
-    int default_screen = XDefaultScreen(display);
+    //int default_screen = XDefaultScreen(display);
     Screen* display_screen = ScreenOfDisplay(display, 0);
-    Window root_window = XRootWindow(display, default_screen);
+    //Window root_window = XRootWindow(display, default_screen);
 
     struct timespec sleep_time;
     sleep_time.tv_sec = s_config.m_ThreadSleepTimeMS / 1000000;
@@ -49,7 +50,7 @@ void *thread_run(void *arg)
         pixel_stride_col *= -1;
 
     XShmSegmentInfo segment_info;
-    XImage* image = XShmCreateImage(display, default_screen, 24, ZPixmap, NULL, &segment_info, display_screen->width, display_screen->height);
+    XImage* image = XShmCreateImage(display, default_visual, 24, ZPixmap, NULL, &segment_info, display_screen->width, display_screen->height);
     segment_info.shmid = shmget(IPC_PRIVATE, image->bytes_per_line * image->height, IPC_CREAT | 0777);
     segment_info.shmaddr = image->data = shmat(segment_info.shmid, 0, 0);
     segment_info.readOnly = False;
@@ -101,7 +102,6 @@ void *thread_run(void *arg)
     pthread_exit(NULL);
 }
 
-static double s_prev_time = 0.0f;
 void screen_run(KeyboardLEDState *led_state)
 {
 
