@@ -22,7 +22,7 @@ export DAEMON_ROOT 		= $(PWD)/daemon
 export LIBRARY_ROOT 	= $(PWD)/common
 export INTERFACE_ROOT 	= $(PWD)/application
 
-.PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup
+.PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup daemon application common
 
 all: setup $(LIBRARY) $(DAEMON) $(INTERFACE)
 
@@ -30,6 +30,10 @@ dbg:
 	@$(MAKE) -C $(DAEMON_ROOT) dbg
 	@$(MAKE) -C $(INTERFACE_ROOT) dbg
 	@$(MAKE) -C $(LIBRARY_ROOT) dbg
+
+daemon: $(DAEMON)
+application: $(INTERFACE)
+common: $(LIBRARY)
 
 $(DAEMON): $(LIBRARY)
 	@$(MAKE) -C $(DAEMON_ROOT)

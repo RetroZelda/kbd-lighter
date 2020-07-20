@@ -48,7 +48,7 @@ setup: $(WORKING_DIR)
 $(WORKING_DIR)/%.o: $(SOURCE_DIR)/%.c
 	@echo building $@ from $<
 	@mkdir -p $(dir $@)
-	@$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@ $(LIBS)
+	@$(CC) $(CFLAGS) $(LDFLAGS) -c $< -o $@
 
 $(WORKING_DIR):
 	@echo creating $(WORKING_DIR)

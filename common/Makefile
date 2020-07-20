@@ -51,7 +51,7 @@ $(OUTPUT): setup $(OBJECTS)
 	@echo complete
 
 $(LIB_INC_DIR)/%.h: $(INCLUDE_DIR)/%.h
-	@echo copying ./$< to $@
+	@echo copying $< to $@
 	@cp $< $@
 
 setup: $(WORKING_DIR)
