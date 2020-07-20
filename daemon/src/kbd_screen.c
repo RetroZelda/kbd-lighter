@@ -38,7 +38,7 @@ void *thread_run(void *arg)
     Window root_window = XRootWindow(display, default_screen);
 
     struct timespec sleep_time;
-    sleep_time.tv_sec = 0;
+    sleep_time.tv_sec = s_config.m_ThreadSleepTimeMS / 1000000;
     sleep_time.tv_nsec = s_config.m_ThreadSleepTimeMS * 1000;
 
     int pixel_stride_row = (int)s_config.m_PixelStrideRow;
@@ -101,32 +101,39 @@ void *thread_run(void *arg)
     pthread_exit(NULL);
 }
 
+static double s_prev_time = 0.0f;
 void screen_run(KeyboardLEDState *led_state)
 {
 
-    // pull a cache of the shared data
-    RGBColor active_rgb_cache;
-    pthread_mutex_lock(&s_active_rgb_lock);
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+
+    double cur_time = (double)ts.tv_sec + ((double)ts.tv_nsec / 1000000000.0);
+    double time_dif = cur_time - s_prev_time;
+    double sleep_time = (double)s_config.m_SleepTimeMS / 1000000.0;
+    if(time_dif >= sleep_time)
     {
-        memcpy(&active_rgb_cache, &s_active_color_rgb, sizeof(RGBColor));
+        s_prev_time = cur_time;
+
+        // pull a cache of the shared data
+        RGBColor active_rgb_cache;
+        pthread_mutex_lock(&s_active_rgb_lock);
+        {
+            memcpy(&active_rgb_cache, &s_active_color_rgb, sizeof(RGBColor));
+        }
+        pthread_mutex_unlock(&s_active_rgb_lock);
+
+        // calculate the kb color with smoothing
+        s_prev_color_rgb = s_cur_color_rgb;
+        s_cur_color_rgb.R = LERP(s_cur_color_rgb.R, active_rgb_cache.R, s_config.m_LerpSmooth * 0.05f);
+        s_cur_color_rgb.G = LERP(s_cur_color_rgb.G, active_rgb_cache.G, s_config.m_LerpSmooth * 0.05f);
+        s_cur_color_rgb.B = LERP(s_cur_color_rgb.B, active_rgb_cache.B, s_config.m_LerpSmooth * 0.05f);
+
+        // display
+        static char buffer[7];
+        snprintf(buffer, 7, "%02X%02X%02X", (int)(s_cur_color_rgb.R * 255.0f), (int)(s_cur_color_rgb.G * 255.0f), (int)(s_cur_color_rgb.B * 255.0f));
+        memcpy(led_state->m_Color.raw, buffer, 6);
     }
-    pthread_mutex_unlock(&s_active_rgb_lock);
-
-    // calculate the kb color with smoothing
-    s_prev_color_rgb = s_cur_color_rgb;
-    s_cur_color_rgb.R = LERP(s_cur_color_rgb.R, active_rgb_cache.R, s_config.m_LerpSmooth * 0.05f);
-    s_cur_color_rgb.G = LERP(s_cur_color_rgb.G, active_rgb_cache.G, s_config.m_LerpSmooth * 0.05f);
-    s_cur_color_rgb.B = LERP(s_cur_color_rgb.B, active_rgb_cache.B, s_config.m_LerpSmooth * 0.05f);
-
-    // display
-    static char buffer[7];
-    snprintf(buffer, 7, "%02X%02X%02X", (int)(s_cur_color_rgb.R * 255.0f), (int)(s_cur_color_rgb.G * 255.0f), (int)(s_cur_color_rgb.B * 255.0f));
-    memcpy(led_state->m_Color.raw, buffer, 6);
-
-    struct timespec sleep_time;
-    sleep_time.tv_sec = 0;
-    sleep_time.tv_nsec = s_config.m_SleepTimeMS * 1000;
-    nanosleep(&sleep_time, NULL);
 }
 
 void screen_setup(KeyboardLEDState *led_state, ScreenConfig *config)

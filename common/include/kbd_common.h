@@ -2,6 +2,8 @@
 #define KBD_COMMON
 
 #define LERP(A,B,L) (A + ((B - A) * L))
+#define RLERP(A,B,V) ((V - A) / (B - A))
+#define SOCKET_ADDR "/tmp/kbd-lighterd"
 
 extern int usleep (unsigned int __useconds); // this might cause issues.  yolo
 
@@ -25,6 +27,12 @@ typedef struct _brightness
 {
     unsigned char value;
 } Brightness;
+
+typedef struct _led_state
+{
+    RGB m_Color;
+    Brightness m_Brightness;
+} LEDState;
 
 typedef struct _keyboard_led_state
 {
