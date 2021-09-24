@@ -1,12 +1,13 @@
-
-export WORKING_DIR = $(PWD)/intermediate
-export OUTPUT_DIR = $(PWD)/output
+ROOT_DIR:=$(shell dirname $(realpath $(firstword $(MAKEFILE_LIST))))
+export WORKING_DIR = $(ROOT_DIR)/intermediate
+export OUTPUT_DIR = $(ROOT_DIR)/output
 export BINARY_DIR = $(OUTPUT_DIR)/bin
 export LIBRARY_DIR = $(OUTPUT_DIR)/lib
 export LIB_INC_DIR = $(OUTPUT_DIR)/include
 export INTERFACE = kbd-lighter
 export DAEMON = $(INTERFACE)d
 export LIBRARY = kbd-common
+export INSTALL_DIR= /usr/local/bin
 
 export CC = gcc
 export CFLAGS = -Wall -g -std=c18 -D_POSIX_C_SOURCE=200809L
@@ -18,18 +19,36 @@ LDFLAGS += $(addprefix -I,$(LIB_HEADERS))
 LDFLAGS += $(addprefix -I,$(LIB_PATHS))
 export LDFLAGS
 
-export DAEMON_ROOT 		= $(PWD)/daemon
-export LIBRARY_ROOT 	= $(PWD)/common
-export INTERFACE_ROOT 	= $(PWD)/application
+export DAEMON_ROOT 		= $(ROOT_DIR)/daemon
+export LIBRARY_ROOT 	= $(ROOT_DIR)/common
+export INTERFACE_ROOT 	= $(ROOT_DIR)/application
 
-.PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup daemon application common
+.PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup daemon application common install uninstall
 
 all: setup $(LIBRARY) $(DAEMON) $(INTERFACE)
 
 dbg:
-	@$(MAKE) -C $(DAEMON_ROOT) dbg
-	@$(MAKE) -C $(INTERFACE_ROOT) dbg
-	@$(MAKE) -C $(LIBRARY_ROOT) dbg
+	#@$(MAKE) -C $(DAEMON_ROOT) dbg
+	#@$(MAKE) -C $(INTERFACE_ROOT) dbg
+	#@$(MAKE) -C $(LIBRARY_ROOT) dbg
+	#$(PWD)
+	#$(ROOT_DIR)
+
+install: 
+	@echo installing to $(INSTALL_DIR)...
+	@cp $(BINARY_DIR)/$(INTERFACE) $(INSTALL_DIR)/$(INTERFACE)
+	@cp $(BINARY_DIR)/$(DAEMON) $(INSTALL_DIR)/$(DAEMON)
+	@echo making executable...
+	@chmod +x $(INSTALL_DIR)/$(INTERFACE)
+	@chmod +x $(INSTALL_DIR)/$(DAEMON)
+	@echo done
+
+uninstall:
+	@echo uninstalling $(INSTALL_DIR)/$(INTERFACE)
+	@rm -f $(INSTALL_DIR)/$(INTERFACE)
+	@echo uninstalling $(INSTALL_DIR)/$(DAEMON)
+	@rm -f $(INSTALL_DIR)/$(DAEMON)
+	@echo done
 
 daemon: $(DAEMON)
 application: $(INTERFACE)

@@ -88,12 +88,12 @@ int main(int argc, char **argv)
         read_data = read(client_handle, &buffer, sizeof(buffer));
         if(read_data > 0)
         {
-            int num_read = read_data / sizeof(LEDState);
+            // int num_read = read_data / sizeof(LEDState);
             memcpy(&led_state, &buffer[0], sizeof(LEDState));
-            printf("read %d bytes for %d structs after %d blocks\n", (int)read_data, num_read, counter);
+            // printf("read %d bytes for %d structs after %d blocks\n", (int)read_data, num_read, counter);
             write_led_brightness(led_state.m_BrightnessFile.m_Handle, &led_state);
             write_led_state(led_state.m_ColorFile.m_Handle, &led_state);
-            //print_led_state(&led_state);
+            // print_led_state(&led_state);
             counter = 0;
         }
         else
