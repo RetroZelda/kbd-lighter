@@ -23,6 +23,8 @@ export DAEMON_ROOT 		= $(ROOT_DIR)/daemon
 export LIBRARY_ROOT 	= $(ROOT_DIR)/common
 export INTERFACE_ROOT 	= $(ROOT_DIR)/application
 
+export CALLING_USER		= $(shell logname)
+
 .PHONY: $(DAEMON) $(INTERFACE) $(LIBRARY) clean dbg setup daemon application common install uninstall
 
 all: setup $(LIBRARY) $(DAEMON) $(INTERFACE)
@@ -33,6 +35,7 @@ dbg:
 	#@$(MAKE) -C $(LIBRARY_ROOT) dbg
 	#$(PWD)
 	#$(ROOT_DIR)
+	#$(CALLING_USER)
 
 install: 
 	@echo installing to $(INSTALL_DIR)...
@@ -41,13 +44,19 @@ install:
 	@echo making executable...
 	@chmod +x $(INSTALL_DIR)/$(INTERFACE)
 	@chmod +x $(INSTALL_DIR)/$(DAEMON)
+	@echo enabling sudo override...
+	@touch /etc/sudoers.d/$(INTERFACE)
+	@echo "$(CALLING_USER) ALL=(ALL) NOPASSWD: $(INSTALL_DIR)/$(INTERFACE)" > /etc/sudoers.d/$(INTERFACE)
+	@chmod 0440 /etc/sudoers.d/$(INTERFACE)
 	@echo done
 
 uninstall:
-	@echo uninstalling $(INSTALL_DIR)/$(INTERFACE)
+	@echo uninstalling $(INSTALL_DIR)/$(INTERFACE)...
 	@rm -f $(INSTALL_DIR)/$(INTERFACE)
-	@echo uninstalling $(INSTALL_DIR)/$(DAEMON)
+	@echo uninstalling $(INSTALL_DIR)/$(DAEMON)...
 	@rm -f $(INSTALL_DIR)/$(DAEMON)
+	@echo removing sudo override...
+	@rm -f /etc/sudoers.d/$(INTERFACE)
 	@echo done
 
 daemon: $(DAEMON)
