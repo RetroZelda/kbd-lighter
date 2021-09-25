@@ -101,16 +101,22 @@ int main(int argc, char **argv)
             switch(errno)
             {
                 case EWOULDBLOCK:
-                    ++counter;
+                    if(++counter > 500)
+                    {
+                        printf("timed out\n");
+					    goto CLOSE;
+                    }
                 break;
                 default:
                     perror("read error");
+					goto CLOSE;
                     break;
             }
         }
         
+        usleep(8000u);
     } while(true);
-
+CLOSE:
     close(client_handle);
     close(led_state.m_ColorFile.m_Handle);
     close(led_state.m_BrightnessFile.m_Handle);

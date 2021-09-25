@@ -170,16 +170,17 @@ int main(int argc, char **argv)
 
     server_setup();
     lighterd_setup(configurations);
-    while (1)
+    int error = 0;
+    while (error == 0)
     {
         server_tick();
         if(server_has_connection())
         {
             lighterd_run();
-            server_write(&s_final_state, sizeof(LEDState));
+            error = (int)server_write(&s_final_state, sizeof(LEDState));
             //print_led_state(&s_final_state);
         }
-        usleep(1000);
+        usleep(8000);
     }
 
     return 0;
