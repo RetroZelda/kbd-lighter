@@ -10,7 +10,7 @@ export LIBRARY = kbd-common
 export INSTALL_DIR= /usr/local/bin
 
 export CC = gcc
-export CFLAGS = -Wall -g -std=c18 -D_POSIX_C_SOURCE=200809L
+export CFLAGS = -Wall -std=c18 -D_POSIX_C_SOURCE=200809L -O3 # use -g -Og for debug optimization and symbols | -O3 for release
 
 export LIB_HEADERS = /usr/include $(LIB_INC_DIR)
 export LIB_PATHS = /usr/lib/x86_64-linux-gnu $(LIBRARY_DIR)
