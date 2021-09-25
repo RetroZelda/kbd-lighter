@@ -14,7 +14,7 @@ typedef struct kbd_server_callbacks
 
 void server_setup();
 void server_shutdown();
-void server_tick();
+bool server_tick();
 
 void server_register_callbacks(ServerCallbacks* callbacks);
 void server_unregister_callbacks(ServerCallbacks* callbacks);

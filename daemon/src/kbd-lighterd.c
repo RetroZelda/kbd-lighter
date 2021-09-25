@@ -173,11 +173,15 @@ int main(int argc, char **argv)
     int error = 0;
     while (error == 0)
     {
-        server_tick();
+        if(!server_tick())
+        {
+            break;
+        }
         if(server_has_connection())
         {
             lighterd_run();
             error = (int)server_write(&s_final_state, sizeof(LEDState));
+            printf("Write %d\n", error);
             //print_led_state(&s_final_state);
         }
         usleep(8000);

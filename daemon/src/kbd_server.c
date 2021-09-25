@@ -109,7 +109,7 @@ void server_shutdown()
     close_server();
 }
 
-void server_tick()
+bool server_tick()
 {
     if(s_client_handle == -1)
     {
@@ -117,6 +117,7 @@ void server_tick()
         if (s_client_handle == -1)
         {
             perror("accept error");
+            return false;
         }
         else
         {
@@ -126,14 +127,14 @@ void server_tick()
             {
                 perror("fcntl get error");
                 close_client();
-                return;
+                return false;
             }
 
             if(fcntl(s_client_handle, F_SETFL, flags | O_NONBLOCK) == -1)
             {
                 perror("fcntl set error");
                 close_client();
-                return;
+                return false;
             }
 
             // notify the callback listeners
@@ -147,6 +148,7 @@ void server_tick()
             }
         }
     }
+    return true;
 }
 
 void server_register_callbacks(ServerCallbacks* callbacks)
@@ -203,5 +205,5 @@ ssize_t server_read(void* out_data, ssize_t data_size)
 
 bool server_has_connection()
 {
-    return s_client_handle != -1;;
+    return s_client_handle != -1;
 }
